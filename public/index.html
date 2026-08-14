@@ -1,0 +1,151 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>人生推测器 | AI Life Path Predictor</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <canvas id="particles"></canvas>
+
+  <div id="app">
+    <!-- ============ HERO ============ -->
+    <section id="hero" class="section active">
+      <div class="hero-content">
+        <div class="crystal-ball">🔮</div>
+        <h1 class="hero-title"><span class="gradient-text">人生推测器</span></h1>
+        <p class="hero-subtitle">假如你做了那个一直犹豫的选择，人生会走向哪里？</p>
+        <p class="hero-desc">AI 会像一位过来人，把你未来的人生一年一年讲给你听</p>
+        <button class="btn-start" onclick="showSection('input')">
+          <span>开始推测</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============ INPUT ============ -->
+    <section id="input" class="section">
+      <div class="container">
+        <div class="section-header">
+          <button class="btn-back" onclick="showSection('hero')">← 返回</button>
+          <h2 class="section-title">写下你的「假如」</h2>
+          <p class="section-desc">任何让你犹豫过的选择——感情、工作、学业、生活方式都行</p>
+        </div>
+
+        <div class="input-card glass-card">
+          <div class="form-group">
+            <label class="form-label"><span class="label-icon">✨</span> 假如我...</label>
+            <textarea id="choiceInput" class="form-textarea" rows="4"
+              placeholder="例如：假如我跟这个女生继续在一起...&#10;假如我30岁裸辞去考公...&#10;假如我放弃高薪回老家小城市生活...&#10;假如我从今天开始做自媒体..."></textarea>
+            <div class="char-count"><span id="charCount">0</span> / 200</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label"><span class="label-icon">⏳</span> 推演未来 <span id="yearsValue" class="highlight">10</span> 年</label>
+            <div class="slider-container">
+              <input type="range" id="yearsSlider" min="1" max="30" value="10" class="form-slider">
+              <div class="slider-labels"><span>1年</span><span>10年</span><span>20年</span><span>30年</span></div>
+            </div>
+          </div>
+
+          <div class="optional-section">
+            <button class="btn-toggle" onclick="toggleOptional()">
+              <span>补充一些背景（可选，推测会更准）</span>
+              <svg class="toggle-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div id="optionalFields" class="optional-fields hidden">
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">当前年龄</label>
+                  <input type="number" id="ageInput" class="form-input" placeholder="25" min="1" max="100">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">性别</label>
+                  <select id="genderInput" class="form-select">
+                    <option value="">不指定</option>
+                    <option value="male">男</option>
+                    <option value="female">女</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">你的处境 / 补充说明</label>
+                <textarea id="contextInput" class="form-textarea" rows="2" placeholder="例如：目前在一线城市做程序员，月薪2万，有房贷..."></textarea>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn-predict" onclick="startPrediction()" id="predictBtn">
+            <span class="btn-text">🔮 开始推测</span>
+            <span class="btn-loading hidden"><div class="spinner"></div>正在为你推演人生...</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ LOADING ============ -->
+    <section id="loading" class="section">
+      <div class="loading-content">
+        <div class="loading-orb">
+          <div class="orb-ring"></div>
+          <div class="orb-ring ring-2"></div>
+          <div class="orb-ring ring-3"></div>
+          <div class="orb-core">🔮</div>
+        </div>
+        <h2 class="loading-title">正在推演你的人生...</h2>
+        <p class="loading-subtitle">AI 正在结合大环境、社会趋势、真实案例为你书写未来</p>
+      </div>
+    </section>
+
+    <!-- ============ RESULT ============ -->
+    <section id="result" class="section">
+      <div class="container-narrow">
+        <div class="result-top-actions">
+          <button class="btn-back" onclick="showSection('input')">← 换个选择试试</button>
+          <button class="btn-reset" onclick="resetAll()">🔄 重置</button>
+        </div>
+
+        <!-- Choice tag -->
+        <div class="choice-tag" id="choiceTag"></div>
+
+        <!-- Narrative -->
+        <div class="narrative-container glass-card">
+          <div class="narrative-text" id="narrativeText"></div>
+        </div>
+
+        <!-- Chat -->
+        <div class="chat-section glass-card">
+          <h3 class="chat-title">💬 还想了解更多？</h3>
+          <p class="chat-desc">有任何疑问都可以继续追问，比如"那到了第5年具体会怎样？"、"如果我性格更内向呢？"</p>
+
+          <div class="chat-messages" id="chatMessages">
+            <div class="chat-system-msg">
+              <span class="chat-avatar">🧠</span>
+              <div class="chat-bubble system-bubble">
+                推演已完成。如果你对某个阶段有疑问，或者想了解更多细节，随时问我。
+                <div class="chat-suggestions">
+                  <button class="suggestion-btn" onclick="sendSuggestion('如果中途我想放弃，最可能是因为什么？')">中途放弃的原因</button>
+                  <button class="suggestion-btn" onclick="sendSuggestion('你觉得最现实的结局是什么样的？')">最现实的结局</button>
+                  <button class="suggestion-btn" onclick="sendSuggestion('有没有什么办法能让结果更好一些？')">怎样结果更好</button>
+                  <button class="suggestion-btn" onclick="sendSuggestion('如果我的经济条件更好/更差，结果会有什么不同？')">经济条件影响</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="chat-input-area">
+            <textarea id="chatInput" class="chat-input" placeholder="输入你的追问..." rows="1"></textarea>
+            <button class="btn-send" onclick="sendChat()" id="sendBtn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
